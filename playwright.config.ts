@@ -12,20 +12,13 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `pnpm exec next dev --port ${port}`,
+    command: `corepack pnpm exec next dev --port ${port}`,
     env: {
       ...process.env,
       CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT ?? "anonymous:anonymous-agent",
       NEXT_PUBLIC_CONVEX_URL:
         process.env.NEXT_PUBLIC_CONVEX_URL ?? "http://127.0.0.1:3210",
-      NEXT_PUBLIC_WORKOS_REDIRECT_URI:
-        process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI ??
-        `http://${host}:${port}/callback`,
-      WORKOS_API_KEY: process.env.WORKOS_API_KEY ?? "sk_test_placeholder",
-      WORKOS_CLIENT_ID: process.env.WORKOS_CLIENT_ID ?? "client_placeholder",
-      WORKOS_COOKIE_PASSWORD:
-        process.env.WORKOS_COOKIE_PASSWORD ??
-        "test_cookie_password_32_chars_long",
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI: `http://${host}:${port}/auth/callback`,
     },
     gracefulShutdown: {
       signal: "SIGTERM",

@@ -40,8 +40,8 @@ export function WorkspaceSwitcher({
         <ChevronsUpDownIcon data-icon="inline-end" />
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-72" align="start">
-        <DropdownMenuLabel>Switch workspace</DropdownMenuLabel>
         <DropdownMenuGroup>
+          <DropdownMenuLabel>Switch workspace</DropdownMenuLabel>
           {workspaces.map((workspace) => (
             <DropdownMenuItem
               key={workspace.id}

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, Manrope } from "next/font/google";
+import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
 import "./globals.css";
 import { RootProviders } from "@/components/providers";
 
@@ -15,7 +16,6 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://next-workos-convex-starter.vercel.app"),
   title: {
     default: "Next WorkOS Convex Starter",
     template: "%s | Next WorkOS Convex Starter",
@@ -35,7 +35,9 @@ export default function RootLayout({
       className={`${manrope.variable} ${plexMono.variable} h-full scroll-smooth antialiased`}
     >
       <body className="min-h-full bg-background text-foreground">
-        <RootProviders>{children}</RootProviders>
+        <AuthKitProvider>
+          <RootProviders>{children}</RootProviders>
+        </AuthKitProvider>
       </body>
     </html>
   );

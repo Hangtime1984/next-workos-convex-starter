@@ -33,7 +33,7 @@ test("renders the marketing shell without browser runtime errors", async ({
   expect(runtimeErrors).toEqual([]);
 });
 
-test("redirects /app to the internal sign-in route in placeholder mode", async ({
+test("redirects /app to the internal sign-in route when signed out", async ({
   request,
 }) => {
   const response = await request.get("/app", { maxRedirects: 0 });
@@ -42,7 +42,7 @@ test("redirects /app to the internal sign-in route in placeholder mode", async (
   expect(response.headers().location).toBe("/sign-in?returnTo=%2Fapp");
 });
 
-test("redirects onboarding to the internal sign-in route in placeholder mode", async ({
+test("redirects onboarding to the internal sign-in route when signed out", async ({
   request,
 }) => {
   const response = await request.get("/onboarding/workspace", {

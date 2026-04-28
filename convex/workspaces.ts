@@ -1,6 +1,6 @@
-import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { getOrganizationId, requireIdentity } from "./lib/auth";
+import { v } from "convex/values";
+import { mutation } from "./_generated/server";
+import { requireIdentity } from "./lib/auth";
 
 export const syncWorkspaceFromOrganization = mutation({
   args: {
@@ -39,49 +39,5 @@ export const syncWorkspaceFromOrganization = mutation({
     });
 
     return await ctx.db.get(workspaceId);
-  },
-});
-
-export const activeWorkspace = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await requireIdentity(ctx);
-    const organizationId = getOrganizationId(identity);
-
-    if (!organizationId) {
-      return null;
-    }
-
-    return ctx.db
-      .query("workspaces")
-      .withIndex("by_organization_id", (query) =>
-        query.eq("organizationId", organizationId),
-      )
-      .unique();
-  },
-});
-
-export const workspaceBySlug = query({
-  args: {
-    slug: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await requireIdentity(ctx);
-    const organizationId = getOrganizationId(identity);
-
-    const workspace = await ctx.db
-      .query("workspaces")
-      .withIndex("by_slug", (query) => query.eq("slug", args.slug))
-      .unique();
-
-    if (!workspace) {
-      return null;
-    }
-
-    if (organizationId !== workspace.organizationId) {
-      throw new ConvexError("Workspace access denied.");
-    }
-
-    return workspace;
   },
 });

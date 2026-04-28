@@ -10,7 +10,7 @@ jobs:
     env:
       CONVEX_DEPLOYMENT: anonymous:anonymous-agent
       NEXT_PUBLIC_CONVEX_URL: http://127.0.0.1:3210
-      NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://localhost:3100/callback
+      NEXT_PUBLIC_WORKOS_REDIRECT_URI: http://localhost:3100/auth/callback
       WORKOS_API_KEY: sk_test_placeholder
       WORKOS_CLIENT_ID: client_placeholder
       WORKOS_COOKIE_PASSWORD: test_cookie_password_32_chars_long

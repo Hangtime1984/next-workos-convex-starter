@@ -63,9 +63,6 @@ export async function createWorkspaceAction(
     const organization = await workos.organizations.createOrganization({
       name,
       externalId: slugify(name),
-      metadata: {
-        source: "aegis-workspace-starter",
-      },
     });
 
     await attachMembership(auth.user.id, organization.id);

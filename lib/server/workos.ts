@@ -46,11 +46,13 @@ export async function getWidgetAuthToken(input: {
   organizationId: string;
   userId: string;
 }) {
-  return getWorkOS().widgets.getToken({
+  const { token } = await getWorkOS().widgets.createToken({
     organizationId: input.organizationId,
     userId: input.userId,
     scopes: widgetScopes[input.widget] as never,
   });
+
+  return token;
 }
 
 export async function listAccessibleWorkspaces(input: {

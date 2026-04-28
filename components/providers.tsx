@@ -2,7 +2,7 @@
 
 import { type ReactNode, useCallback, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthKitProvider, useAccessToken, useAuth } from "@workos-inc/authkit-nextjs/components";
+import { useAccessToken, useAuth } from "@workos-inc/authkit-nextjs/components";
 import { ConvexReactClient, ConvexProviderWithAuth } from "convex/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
@@ -54,12 +54,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
-    <AuthKitProvider>
-      <QueryClientProvider client={queryClient}>
-        <ConvexProviderWithAuth client={convex} useAuth={useAuthFromWorkOS}>
-          {children}
-        </ConvexProviderWithAuth>
-      </QueryClientProvider>
-    </AuthKitProvider>
+    <QueryClientProvider client={queryClient}>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromWorkOS}>
+        {children}
+      </ConvexProviderWithAuth>
+    </QueryClientProvider>
   );
 }

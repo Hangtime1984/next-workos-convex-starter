@@ -6,6 +6,7 @@ export default authkitProxy({
 
 export const config = {
   matcher: [
+    "/",
     "/app/:path*",
     "/w/:path*",
     "/settings/:path*",

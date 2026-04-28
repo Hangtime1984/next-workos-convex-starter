@@ -67,15 +67,17 @@ export function UserMenu({
         </div>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel className="space-y-2">
-          <div className="truncate font-medium text-foreground">
-            {user.name ?? "Workspace user"}
-          </div>
-          <div className="truncate text-xs font-normal text-muted-foreground">
-            {user.email ?? "No email available"}
-          </div>
-          <Badge variant="secondary">{role}</Badge>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="space-y-2">
+            <div className="truncate font-medium text-foreground">
+              {user.name ?? "Workspace user"}
+            </div>
+            <div className="truncate text-xs font-normal text-muted-foreground">
+              {user.email ?? "No email available"}
+            </div>
+            <Badge variant="secondary">{role}</Badge>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem render={<Link href="/settings/profile" />}>
