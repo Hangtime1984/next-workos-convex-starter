@@ -17,11 +17,11 @@ const plexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Next WorkOS Convex Starter",
-    template: "%s | Next WorkOS Convex Starter",
+    default: "CaptialProjectLaunchPad",
+    template: "%s | CaptialProjectLaunchPad",
   },
   description:
-    "Enterprise SaaS starter for Next.js, Vercel, Convex, shadcn/ui, and WorkOS AuthKit.",
+    "Capital project launchpad for construction owners evaluating delivery methods and procurement packages.",
 };
 
 export default function RootLayout({

@@ -1,5 +1,5 @@
 {
-  "name": "next-workos-convex-starter",
+  "name": "captial-project-launchpad",
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@10.18.3",
@@ -15,7 +15,7 @@
     "test:smoke": "playwright test",
     "test": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test:unit && corepack pnpm test:smoke",
     "convex:dev": "convex dev",
-    "convex:deploy": "convex deploy --cmd \"corepack pnpm build\"",
+    "convex:deploy": "convex deploy --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL --cmd \"corepack pnpm build\"",
     "convex:codegen": "convex codegen",
     "vercel-build": "corepack pnpm convex:deploy"
   },

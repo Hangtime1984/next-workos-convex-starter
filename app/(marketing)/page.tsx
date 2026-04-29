@@ -39,7 +39,7 @@ export default function MarketingPage() {
         <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center gap-3">
-              <Badge variant="secondary">Enterprise starter</Badge>
+              <Badge variant="secondary">CaptialProjectLaunchPad</Badge>
               <span className="text-sm text-muted-foreground">
                 Next.js 16 + Convex + WorkOS + shadcn/ui
               </span>
@@ -47,12 +47,12 @@ export default function MarketingPage() {
 
             <div className="flex max-w-3xl flex-col gap-4">
               <h1 className="max-w-3xl text-4xl font-semibold tracking-tight text-balance md:text-6xl">
-                Ship the first serious version of your B2B SaaS before you touch auth plumbing.
+                Choose a delivery method and assemble the right procurement package faster.
               </h1>
               <p className="max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">
-                Next WorkOS Convex Starter is an opinionated template for Vercel-hosted teams that
-                need organizations, role-aware admin flows, realtime app data, and WorkOS widgets
-                in the same codebase from day one.
+                CaptialProjectLaunchPad helps construction owners evaluate capital project
+                delivery options, manage org-scoped project work, and generate procurement-ready
+                outputs in a secure workspace.
               </p>
             </div>
 
@@ -61,7 +61,7 @@ export default function MarketingPage() {
                 href="/sign-up"
                 className={cn(buttonVariants({ size: "lg" }))}
               >
-                Launch the starter
+                Launch the workspace
                 <ArrowRightIcon data-icon="inline-end" />
               </Link>
               <Link
@@ -117,7 +117,7 @@ export default function MarketingPage() {
                 </div>
               </div>
               <div className="rounded-2xl border border-border/70 bg-background/80 p-4">
-                <div className="mb-2 font-medium text-foreground">Starter opinion</div>
+                <div className="mb-2 font-medium text-foreground">Product opinion</div>
                 <p>
                   WorkOS owns identity and tenancy. Convex stores app-specific profile, workspace,
                   and project data. The UI only exposes admin routes when the current role and

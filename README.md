@@ -1,6 +1,6 @@
-# Next WorkOS Convex Starter
+# CaptialProjectLaunchPad
 
-Enterprise SaaS starter built with Next.js App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Convex, WorkOS AuthKit, and WorkOS Widgets.
+Capital project launchpad built with Next.js App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui, Convex, WorkOS AuthKit, and WorkOS Widgets.
 
 The starter is opinionated in a few ways:
 
@@ -218,7 +218,7 @@ At minimum:
 
 1. Set the WorkOS and Convex environment variables in Vercel.
 2. Keep the preview and production callback URLs aligned with `convex.json`.
-3. Keep the Vercel build command as `corepack pnpm vercel-build`; it runs `convex deploy --cmd "corepack pnpm build"` so the backend schema/functions and Next.js app are published together.
+3. Keep the Vercel build command as `corepack pnpm vercel-build`; it runs `convex deploy --cmd-url-env-var-name NEXT_PUBLIC_CONVEX_URL --cmd "corepack pnpm build"` so the backend schema/functions and Next.js app are published together.
 
 `CONVEX_DEPLOY_KEY` is required in Vercel for this non-interactive deployment path.
 
