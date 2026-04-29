@@ -3,7 +3,7 @@ import { fetchMutation } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 import type { Role, WidgetKey, WorkspaceSummary } from "@/lib/types";
 import { env } from "@/lib/server/env";
-import { slugify } from "@/lib/utils";
+import { buildWorkspaceSlug } from "@/lib/utils";
 
 const widgetScopes = {
   "user-profile": [] as [],
@@ -57,6 +57,7 @@ export async function getWidgetAuthToken(input: {
 
 export async function listAccessibleWorkspaces(input: {
   accessToken: string;
+  activeOrganizationId?: string | null;
   userId: string;
 }) {
   const workos = getWorkOS();
@@ -72,33 +73,45 @@ export async function listAccessibleWorkspaces(input: {
       const organization = await workos.organizations.getOrganization(
         membership.organizationId,
       );
-      const workspace = await fetchMutation(
-        api.workspaces.syncWorkspaceFromOrganization,
-        {
-          organizationId: organization.id,
-          name: organization.name,
-          slug:
-            slugify(organization.name) ||
-            `workspace-${organization.id.slice(-6).toLowerCase()}`,
-          externalId: organization.externalId ?? undefined,
-          domain: organization.domains[0]?.domain ?? undefined,
-        },
-        { token: input.accessToken },
-      );
 
-      if (!workspace) {
-        throw new Error(
-          `Unable to mirror WorkOS organization ${organization.id} into Convex.`,
-        );
-      }
-
-      return {
-        id: workspace._id,
-        organizationId: workspace.organizationId,
-        name: workspace.name,
-        slug: workspace.slug,
+      const summary = {
+        id: organization.id as WorkspaceSummary["id"],
+        organizationId: organization.id,
+        name: organization.name,
+        slug: buildWorkspaceSlug(organization.name, organization.id),
         roleSlug: membership.role?.slug ?? "member",
       } satisfies WorkspaceSummary;
+
+      if (
+        input.activeOrganizationId &&
+        organization.id === input.activeOrganizationId
+      ) {
+        const workspace = await fetchMutation(
+          api.workspaces.syncWorkspaceFromOrganization,
+          {
+            organizationId: organization.id,
+            name: organization.name,
+            slug: summary.slug,
+            externalId: organization.externalId ?? undefined,
+            domain: organization.domains[0]?.domain ?? undefined,
+          },
+          { token: input.accessToken },
+        );
+
+        if (!workspace) {
+          throw new Error(
+            `Unable to mirror WorkOS organization ${organization.id} into Convex.`,
+          );
+        }
+
+        return {
+          ...summary,
+          id: workspace._id,
+          slug: workspace.slug,
+        };
+      }
+
+      return summary;
     }),
   );
 

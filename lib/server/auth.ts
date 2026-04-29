@@ -1,9 +1,14 @@
 import { withAuth } from "@workos-inc/authkit-nextjs";
 import { fetchMutation, fetchQuery } from "convex/nextjs";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Role, WorkspaceSummary } from "@/lib/types";
+import {
+  buildProjectPath,
+  buildWorkspacePath,
+  buildWorkspaceProjectsPath,
+} from "@/lib/routes";
 import { buildActivateOrganizationPath, buildSignInPath } from "@/lib/utils";
 import {
   canAccessAdmin,
@@ -22,6 +27,7 @@ export const getAppContext = cache(async () => {
   await fetchMutation(api.users.syncViewerProfile, {}, { token: auth.accessToken });
 
   const workspaces = await listAccessibleWorkspaces({
+    activeOrganizationId: auth.organizationId,
     accessToken: auth.accessToken,
     userId: auth.user.id,
   });
@@ -39,7 +45,7 @@ export const getAppContext = cache(async () => {
     redirect(
       buildActivateOrganizationPath({
         organizationId: activeWorkspace.organizationId,
-        returnTo: `/w/${activeWorkspace.slug}`,
+        returnTo: buildWorkspacePath(activeWorkspace.slug),
       }),
     );
   }
@@ -56,6 +62,63 @@ export const getAppContext = cache(async () => {
     permissions: auth.permissions ?? [],
   };
 });
+
+export type AppContext = Awaited<ReturnType<typeof getAppContext>>;
+
+export async function requireWorkspaceRouteContext(
+  slug: string,
+  options: { returnTo?: string } = {},
+) {
+  const context = await getAppContext();
+
+  if (slug === context.activeWorkspace.slug) {
+    return {
+      ...context,
+      routeWorkspace: context.activeWorkspace,
+    };
+  }
+
+  const requestedWorkspace = context.workspaces.find(
+    (workspace: WorkspaceSummary) => workspace.slug === slug,
+  );
+
+  if (!requestedWorkspace) {
+    notFound();
+  }
+
+  redirect(
+    buildActivateOrganizationPath({
+      organizationId: requestedWorkspace.organizationId,
+      returnTo: options.returnTo ?? buildWorkspaceProjectsPath(requestedWorkspace.slug),
+    }),
+  );
+}
+
+export async function requireProjectRouteContext(input: {
+  workspaceSlug: string;
+  projectSlug: string;
+}) {
+  const context = await requireWorkspaceRouteContext(input.workspaceSlug, {
+    returnTo: buildProjectPath(input),
+  });
+  const project = await fetchQuery(
+    api.projects.getProjectBySlug,
+    {
+      workspaceId: context.activeWorkspace.id,
+      slug: input.projectSlug,
+    },
+    { token: context.auth.accessToken },
+  );
+
+  if (!project) {
+    notFound();
+  }
+
+  return {
+    ...context,
+    project,
+  };
+}
 
 export async function requireAdminContext() {
   const context = await getAppContext();

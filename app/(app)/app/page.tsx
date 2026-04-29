@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAppContext } from "@/lib/server/auth";
+import { buildWorkspacePath } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 export default async function AppOverviewPage() {
@@ -13,7 +14,6 @@ export default async function AppOverviewPage() {
     api.projects.listProjects,
     {
       workspaceId: context.activeWorkspace.id,
-      organizationId: context.activeWorkspace.organizationId,
     },
     { token: context.auth.accessToken },
   );
@@ -33,7 +33,7 @@ export default async function AppOverviewPage() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
-              href={`/w/${context.activeWorkspace.slug}`}
+              href={buildWorkspacePath(context.activeWorkspace.slug)}
               className={cn(buttonVariants())}
             >
               Open workspace

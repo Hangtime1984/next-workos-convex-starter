@@ -1,6 +1,6 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { mutation } from "./_generated/server";
-import { requireIdentity } from "./lib/auth";
+import { getOrganizationId, requireIdentity } from "./lib/auth";
 
 export const syncWorkspaceFromOrganization = mutation({
   args: {
@@ -12,6 +12,11 @@ export const syncWorkspaceFromOrganization = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await requireIdentity(ctx);
+
+    if (getOrganizationId(identity) !== args.organizationId) {
+      throw new ConvexError("Workspace sync denied for inactive organization.");
+    }
+
     const existing = await ctx.db
       .query("workspaces")
       .withIndex("by_organization_id", (query) =>

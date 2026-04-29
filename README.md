@@ -5,7 +5,8 @@ Enterprise SaaS starter built with Next.js App Router, React 19, TypeScript, Tai
 The starter is opinionated in a few ways:
 
 - WorkOS is the source of truth for identity, organizations, and role claims.
-- Convex stores only app-specific data: `profiles`, `workspaces`, and `projects`.
+- Convex stores only app-specific data: profiles, mirrored workspaces, projects,
+  intake profiles, generated outputs, and generation audit events.
 - The app is server-first. Client components are limited to auth bridging, widget surfaces, and realtime project interactions.
 - Admin routes are protected both in navigation and on the server.
 
@@ -139,13 +140,18 @@ If you prefer to manage WorkOS configuration manually, keep the same redirect UR
 
 WorkOS organizations are the tenancy authority. Convex mirrors each active organization into a `workspaces` record so the app can attach internal metadata and query by slug.
 
-The data model is intentionally minimal:
+The data model is organized around the Capital Project Launchpad MVP:
 
 - `profiles`: cached app profile for the signed-in user
 - `workspaces`: mirrored organization metadata
-- `projects`: example org-scoped business records
+- `projects`: org-scoped capital project records
+- `projectProfiles`: resumable project intake data
+- `deliveryAnalyses`: generated delivery recommendation records
+- `procurementPackages`: generated procurement output records
+- `generationEvents`: audit trail for generated content
 
 There is no membership table in Convex. Membership and role data stay in WorkOS.
+Every app-data query and mutation derives the active organization from WorkOS JWT claims and rejects cross-organization access.
 
 ## Roles And Widgets
 
@@ -169,6 +175,41 @@ Widget scopes used by the starter:
 
 Make sure your WorkOS roles grant the matching permissions, or the admin pages and widget token endpoint will correctly reject access.
 
+## Frontend Integration Pattern
+
+Use the live WorkOS and Convex contracts directly. Do not store active workspace,
+organization, role, permissions, or project data in `localStorage`.
+
+Server-rendered app routes should start with the helpers in `lib/server/auth.ts`:
+
+- `getAppContext()` for signed-in pages that need the active workspace, viewer, role, and WorkOS permissions.
+- `requireWorkspaceRouteContext(slug)` for `/w/[slug]` and `/w/[slug]/projects` routes.
+- `requireProjectRouteContext({ workspaceSlug, projectSlug })` for project detail routes such as intake, delivery, procurement, and exports.
+- `requireAdminContext()` for admin-only pages.
+
+Server Components should use `fetchQuery` or `preloadQuery` with
+`context.auth.accessToken`. Client Components should be rendered under
+`AppProviders` and use Convex hooks such as `usePreloadedQuery` and
+`useMutation`; Convex and WorkOS still enforce the real authorization checks.
+
+Pure frontend helpers live in:
+
+- `lib/routes.ts` for `/app`, workspace project, and project-section URL builders.
+- `lib/frontend-contracts.ts` for project/output status labels, role labels, permission affordances, user-facing error normalization, and shared data-contract types.
+
+Route expectations for the Capital Project Launchpad UI phases:
+
+- `/app`: authenticated overview and entry point.
+- `/w/[slug]/projects`: active workspace project list.
+- `/w/[slug]/projects/[projectSlug]/intake`: project intake/profile.
+- `/w/[slug]/projects/[projectSlug]/delivery`: delivery analyses.
+- `/w/[slug]/projects/[projectSlug]/procurement`: procurement packages.
+- `/w/[slug]/projects/[projectSlug]/exports`: approved output exports.
+
+Unknown workspace or project slugs should resolve to `notFound()`. Known but
+inactive workspaces should route through `/auth/activate-organization` so the
+WorkOS session organization changes before Convex data is queried.
+
 ## Deployment
 
 Deploy on Vercel with the same environment variables used locally.
@@ -177,7 +218,9 @@ At minimum:
 
 1. Set the WorkOS and Convex environment variables in Vercel.
 2. Keep the preview and production callback URLs aligned with `convex.json`.
-3. Run `corepack pnpm convex:deploy` during deployment so the backend schema and functions are published alongside the Next.js app.
+3. Keep the Vercel build command as `corepack pnpm vercel-build`; it runs `convex deploy --cmd "corepack pnpm build"` so the backend schema/functions and Next.js app are published together.
+
+`CONVEX_DEPLOY_KEY` is required in Vercel for this non-interactive deployment path.
 
 ## Project Structure
 
@@ -192,13 +235,20 @@ components/
   forms/                 onboarding forms
   widgets/               WorkOS widget client islands
 convex/
-  schema.ts              profiles, workspaces, projects
+  schema.ts              profiles, workspaces, projects, generated-output tables
   users.ts               viewer and profile sync
   workspaces.ts          workspace mirror queries/mutations
-  projects.ts            sample realtime domain
+  projects.ts            project list/create/rename
+  projectProfiles.ts     resumable intake persistence
+  deliveryAnalyses.ts    delivery recommendation records
+  procurementPackages.ts procurement output records
+  generationEvents.ts    generation audit trail
 lib/server/
   auth.ts                app context and route guards
   workos.ts              WorkOS client, role checks, widget token helpers
+lib/
+  routes.ts              app/workspace/project URL builders
+  frontend-contracts.ts  frontend data labels, permissions, and error helpers
 ```
 
 ## Smoke Validation

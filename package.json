@@ -16,7 +16,8 @@
     "test": "corepack pnpm lint && corepack pnpm typecheck && corepack pnpm test:unit && corepack pnpm test:smoke",
     "convex:dev": "convex dev",
     "convex:deploy": "convex deploy --cmd \"corepack pnpm build\"",
-    "convex:codegen": "convex codegen"
+    "convex:codegen": "convex codegen",
+    "vercel-build": "corepack pnpm convex:deploy"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",

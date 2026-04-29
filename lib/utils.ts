@@ -14,6 +14,13 @@ export function slugify(value: string) {
     .slice(0, 48);
 }
 
+export function buildWorkspaceSlug(name: string, organizationId: string) {
+  const base = slugify(name) || "workspace";
+  const suffix = organizationId.slice(-6).toLowerCase();
+
+  return `${base}-${suffix}`;
+}
+
 export function formatTimestamp(value: number) {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",

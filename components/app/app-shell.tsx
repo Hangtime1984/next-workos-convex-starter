@@ -10,6 +10,8 @@ import {
   Users2Icon,
 } from "lucide-react";
 import type { Role, WorkspaceSummary } from "@/lib/types";
+import { canAccessAdminUi, getRoleLabel } from "@/lib/frontend-contracts";
+import { buildAppPath, buildWorkspacePath } from "@/lib/routes";
 import { Badge } from "@/components/ui/badge";
 import {
   Sidebar,
@@ -51,16 +53,16 @@ export function AppShell({
 
   const navigation = [
     {
-      href: "/app",
+      href: buildAppPath(),
       label: "Overview",
       icon: LayoutDashboardIcon,
-      active: pathname === "/app",
+      active: pathname === buildAppPath(),
     },
     {
-      href: `/w/${activeWorkspace.slug}`,
+      href: buildWorkspacePath(activeWorkspace.slug),
       label: "Projects",
       icon: FolderKanbanIcon,
-      active: pathname.startsWith(`/w/${activeWorkspace.slug}`),
+      active: pathname.startsWith(buildWorkspacePath(activeWorkspace.slug)),
     },
     {
       href: "/settings/profile",
@@ -90,7 +92,7 @@ export function AppShell({
       <Sidebar collapsible="icon" variant="floating">
         <SidebarHeader className="gap-4 px-3 py-3">
           <Link
-            href="/app"
+            href={buildAppPath()}
             className="flex items-center gap-3 rounded-2xl px-1"
           >
             <div className="flex size-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
@@ -129,7 +131,7 @@ export function AppShell({
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {(role === "owner" || role === "admin") && (
+          {canAccessAdminUi(role) && (
             <SidebarGroup>
               <SidebarGroupLabel>Admin</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -168,7 +170,7 @@ export function AppShell({
             </div>
           </div>
           <div className="ml-auto">
-            <Badge variant="secondary">{role}</Badge>
+            <Badge variant="secondary">{getRoleLabel(role)}</Badge>
           </div>
         </header>
         <div className="page-shell">{children}</div>

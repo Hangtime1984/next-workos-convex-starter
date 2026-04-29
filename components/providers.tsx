@@ -6,6 +6,7 @@ import { useAccessToken, useAuth } from "@workos-inc/authkit-nextjs/components";
 import { ConvexReactClient, ConvexProviderWithAuth } from "convex/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { publicEnv } from "@/lib/public-env";
 
 function useAuthFromWorkOS() {
   const { user, loading } = useAuth();
@@ -49,7 +50,7 @@ export function RootProviders({ children }: { children: ReactNode }) {
 
 export function AppProviders({ children }: { children: ReactNode }) {
   const [convex] = useState(
-    () => new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!),
+    () => new ConvexReactClient(publicEnv().NEXT_PUBLIC_CONVEX_URL),
   );
   const [queryClient] = useState(() => new QueryClient());
 

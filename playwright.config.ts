@@ -12,7 +12,8 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: `corepack pnpm exec next dev --port ${port}`,
+    command: `corepack pnpm build && corepack pnpm exec next start --port ${port}`,
+    cwd: __dirname,
     env: {
       ...process.env,
       CONVEX_DEPLOYMENT: process.env.CONVEX_DEPLOYMENT ?? "anonymous:anonymous-agent",

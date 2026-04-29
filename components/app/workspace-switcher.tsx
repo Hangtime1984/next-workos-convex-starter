@@ -4,6 +4,7 @@ import { startTransition, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { ChevronsUpDownIcon, Loader2Icon } from "lucide-react";
 import type { WorkspaceSummary } from "@/lib/types";
+import { buildWorkspacePath } from "@/lib/routes";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -54,7 +55,7 @@ export function WorkspaceSwitcher({
                 startTransition(async () => {
                   try {
                     await switchToOrganization(workspace.organizationId, {
-                      returnTo: `/w/${workspace.slug}`,
+                      returnTo: buildWorkspacePath(workspace.slug),
                     });
                   } finally {
                     setPendingWorkspaceId(null);

@@ -1,10 +1,8 @@
 import { preloadQuery } from "convex/nextjs";
-import { notFound, redirect } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectWorkspacePanel } from "@/components/app/project-workspace-panel";
-import { getAppContext } from "@/lib/server/auth";
-import type { WorkspaceSummary } from "@/lib/types";
+import { requireWorkspaceRouteContext } from "@/lib/server/auth";
 
 export default async function WorkspacePage({
   params,
@@ -12,25 +10,12 @@ export default async function WorkspacePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const context = await getAppContext();
-
-  if (slug !== context.activeWorkspace.slug) {
-    const isKnownWorkspace = context.workspaces.some(
-      (workspace: WorkspaceSummary) => workspace.slug === slug,
-    );
-
-    if (!isKnownWorkspace) {
-      notFound();
-    }
-
-    redirect("/app");
-  }
+  const context = await requireWorkspaceRouteContext(slug);
 
   const preloadedProjects = await preloadQuery(
     api.projects.listProjects,
     {
       workspaceId: context.activeWorkspace.id,
-      organizationId: context.activeWorkspace.organizationId,
     },
     { token: context.auth.accessToken },
   );
