@@ -74,12 +74,25 @@ export const createProject = mutation({
   args: {
     workspaceId: v.id("workspaces"),
     name: v.string(),
+    programDepartment: v.string(),
+    location: v.string(),
+    projectType: v.string(),
+    templateKey: v.optional(v.string()),
+    createAsDraft: v.boolean(),
   },
   handler: async (ctx, args) => {
     const name = args.name.trim();
+    const programDepartment = args.programDepartment.trim();
+    const location = args.location.trim();
+    const projectType = args.projectType.trim();
+    const templateKey = args.templateKey?.trim();
 
     if (name.length < 2) {
       throw new ConvexError("Project names should be at least 2 characters long.");
+    }
+
+    if (!programDepartment || !location || !projectType) {
+      throw new ConvexError("Program, location, and project type are required.");
     }
 
     const { identity, workspace } = await requireWorkspaceAccess(
@@ -91,7 +104,12 @@ export const createProject = mutation({
       organizationId: workspace.organizationId,
       name,
       slug: await availableProjectSlug(ctx, workspace._id, name),
-      status: "planning",
+      programDepartment,
+      location,
+      projectType,
+      templateKey: templateKey || undefined,
+      createAsDraft: args.createAsDraft,
+      status: args.createAsDraft ? "planning" : "active",
       createdByUserId: identity.subject,
       updatedAt: Date.now(),
     });

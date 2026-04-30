@@ -5,18 +5,44 @@ import {
   normalizeReturnTo,
 } from "@/lib/utils";
 import {
+  buildAdminSsoPath,
+  buildAdminUsersPath,
   buildAppPath,
+  buildProfileSettingsPath,
   buildProjectPath,
+  buildWorkspacePackagesPath,
   buildWorkspacePath,
   buildWorkspaceProjectsPath,
+  buildWorkspaceReportsPath,
+  buildWorkspaceSectionPath,
+  buildWorkspaceSettingsPath,
+  buildWorkspaceTemplatesPath,
 } from "@/lib/routes";
 
 describe("route helpers", () => {
   it("builds authenticated app and workspace paths", () => {
     expect(buildAppPath()).toBe("/app");
+    expect(buildProfileSettingsPath()).toBe("/settings/profile");
+    expect(buildAdminUsersPath()).toBe("/admin/users");
+    expect(buildAdminSsoPath()).toBe("/admin/sso");
     expect(buildWorkspacePath("capital-projects")).toBe("/w/capital-projects");
     expect(buildWorkspaceProjectsPath("capital-projects")).toBe(
       "/w/capital-projects/projects",
+    );
+    expect(buildWorkspaceTemplatesPath("capital-projects")).toBe(
+      "/w/capital-projects/templates",
+    );
+    expect(buildWorkspacePackagesPath("capital-projects")).toBe(
+      "/w/capital-projects/packages",
+    );
+    expect(buildWorkspaceReportsPath("capital-projects")).toBe(
+      "/w/capital-projects/reports",
+    );
+    expect(buildWorkspaceSettingsPath("capital-projects")).toBe(
+      "/w/capital-projects/settings",
+    );
+    expect(buildWorkspaceSectionPath("capital-projects", "reports")).toBe(
+      "/w/capital-projects/reports",
     );
   });
 
@@ -31,6 +57,13 @@ describe("route helpers", () => {
       buildProjectPath({
         workspaceSlug: "capital-projects",
         projectSlug: "library-renovation",
+        section: "intake",
+      }),
+    ).toBe("/w/capital-projects/projects/library-renovation/intake");
+    expect(
+      buildProjectPath({
+        workspaceSlug: "capital-projects",
+        projectSlug: "library-renovation",
         section: "delivery",
       }),
     ).toBe("/w/capital-projects/projects/library-renovation/delivery");
@@ -38,6 +71,9 @@ describe("route helpers", () => {
 
   it("encodes dynamic route segments", () => {
     expect(buildWorkspacePath("capital projects")).toBe("/w/capital%20projects");
+    expect(buildWorkspaceSettingsPath("capital projects")).toBe(
+      "/w/capital%20projects/settings",
+    );
     expect(
       buildProjectPath({
         workspaceSlug: "capital projects",

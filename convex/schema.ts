@@ -51,6 +51,11 @@ export default defineSchema({
     organizationId: v.string(),
     name: v.string(),
     slug: v.string(),
+    programDepartment: v.optional(v.string()),
+    location: v.optional(v.string()),
+    projectType: v.optional(v.string()),
+    templateKey: v.optional(v.string()),
+    createAsDraft: v.optional(v.boolean()),
     status: v.union(
       v.literal("planning"),
       v.literal("active"),

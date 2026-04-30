@@ -3,21 +3,32 @@ import {
   canAccessAdminUi,
   canApproveOutputs,
   canUseWidget,
+  createEmptyProjectDraft,
   documentTypes,
+  filterProjects,
   getOutputStatusLabel,
+  getProjectStageLabel,
   getProjectStatusLabel,
   getRoleLabel,
+  isCreateProjectDraftValid,
   normalizeAppError,
+  normalizeCreateProjectDraft,
   outputStatuses,
   projectStatuses,
+  projectTemplateOptions,
+  projectTypeOptions,
   requiredIntakeFields,
   selectionApproaches,
+  validateCreateProjectDraft,
+  type FilterableProject,
 } from "@/lib/frontend-contracts";
 
 describe("frontend data contracts", () => {
   it("exposes stable enums for live Convex data", () => {
     expect(projectStatuses).toEqual(["planning", "active", "archived"]);
     expect(outputStatuses).toEqual(["draft", "reviewed", "approved", "archived"]);
+    expect(projectTypeOptions).toContain("Civic / municipal");
+    expect(projectTemplateOptions).toContain("Public owner procurement");
     expect(documentTypes).toContain("selection_committee_packet");
     expect(selectionApproaches).toEqual(["QBS", "Best Value", "Low Bid"]);
     expect(requiredIntakeFields).toContain("marketConditions");
@@ -25,8 +36,80 @@ describe("frontend data contracts", () => {
 
   it("formats status and role labels", () => {
     expect(getProjectStatusLabel("planning")).toBe("Planning");
+    expect(getProjectStageLabel({ status: "planning" })).toBe("Draft");
+    expect(getProjectStageLabel({ status: "planning", createAsDraft: false })).toBe(
+      "Intake",
+    );
     expect(getOutputStatusLabel("reviewed")).toBe("Reviewed");
     expect(getRoleLabel("owner")).toBe("Owner");
+  });
+});
+
+describe("project dashboard helpers", () => {
+  it("validates and normalizes create-project drafts", () => {
+    const empty = createEmptyProjectDraft();
+
+    expect(isCreateProjectDraftValid(empty)).toBe(false);
+    expect(validateCreateProjectDraft(empty)).toEqual({
+      name: "Project name must be at least 2 characters.",
+      programDepartment: "Program or department is required.",
+      location: "Location is required.",
+      projectType: "Project type is required.",
+    });
+
+    const valid = {
+      ...empty,
+      name: "  Library Renovation  ",
+      programDepartment: " Capital Planning ",
+      location: " Austin, TX ",
+      projectType: "Education",
+      templateKey: "",
+    };
+
+    expect(isCreateProjectDraftValid(valid)).toBe(true);
+    expect(normalizeCreateProjectDraft(valid)).toEqual({
+      name: "Library Renovation",
+      programDepartment: "Capital Planning",
+      location: "Austin, TX",
+      projectType: "Education",
+      templateKey: undefined,
+      createAsDraft: true,
+    });
+  });
+
+  it("filters projects by search text and status", () => {
+    const projects = [
+      {
+        name: "Riverfront Community Center",
+        slug: "riverfront-community-center",
+        status: "planning",
+        programDepartment: "Parks",
+        location: "Portland",
+        projectType: "Civic / municipal",
+      },
+      {
+        name: "Library Renovation",
+        slug: "library-renovation",
+        status: "active",
+        programDepartment: "Facilities",
+        location: "Austin",
+        projectType: "Education",
+      },
+    ] satisfies FilterableProject[];
+
+    expect(
+      filterProjects(projects, { search: "parks", status: "all" }).map(
+        (project) => project.slug,
+      ),
+    ).toEqual(["riverfront-community-center"]);
+    expect(
+      filterProjects(projects, { search: "renovation", status: "planning" }),
+    ).toEqual([]);
+    expect(
+      filterProjects(projects, { search: "", status: "active" }).map(
+        (project) => project.slug,
+      ),
+    ).toEqual(["library-renovation"]);
   });
 });
 

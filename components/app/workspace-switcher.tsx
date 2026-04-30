@@ -4,7 +4,7 @@ import { startTransition, useState } from "react";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { ChevronsUpDownIcon, Loader2Icon } from "lucide-react";
 import type { WorkspaceSummary } from "@/lib/types";
-import { buildWorkspacePath } from "@/lib/routes";
+import { buildWorkspaceProjectsPath } from "@/lib/routes";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,7 +33,7 @@ export function WorkspaceSwitcher({
           <Button
             variant="outline"
             size="sm"
-            className="w-full justify-between"
+            className="w-full justify-between border-white/[0.12] bg-white/[0.07] text-white hover:bg-white/[0.12] hover:text-white"
           />
         }
       >
@@ -55,7 +55,7 @@ export function WorkspaceSwitcher({
                 startTransition(async () => {
                   try {
                     await switchToOrganization(workspace.organizationId, {
-                      returnTo: buildWorkspacePath(workspace.slug),
+                      returnTo: buildWorkspaceProjectsPath(workspace.slug),
                     });
                   } finally {
                     setPendingWorkspaceId(null);

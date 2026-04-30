@@ -1,73 +1,139 @@
 "use client";
 
-import { useDeferredValue, useState, useTransition } from "react";
-import { useMutation, usePreloadedQuery, type Preloaded } from "convex/react";
-import { toast } from "sonner";
-import { SearchIcon } from "lucide-react";
+import Link from "next/link";
+import { useDeferredValue, useMemo, useState } from "react";
+import { useConvexAuth, useQuery } from "convex/react";
+import {
+  ArrowRightIcon,
+  Building2Icon,
+  MapPinIcon,
+  PlusIcon,
+  SearchIcon,
+} from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import {
+  filterProjects,
+  getProjectStage,
+  getProjectStageLabel,
+  getProjectStatusLabel,
+  projectStatuses,
+  type ProjectStage,
+} from "@/lib/frontend-contracts";
+import { buildProjectPath } from "@/lib/routes";
+import { formatTimestamp } from "@/lib/utils";
+import {
+  BrandedCard,
+  EmptyStateShell,
+  LoadingState,
+  PageHeader,
+  PermissionNotice,
+  StatusBadge,
+  StatusDot,
+  type StatusTone,
+} from "@/components/app/app-primitives";
+import { ProjectCreateDialog } from "@/components/app/project-create-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
-import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
   InputGroupText,
 } from "@/components/ui/input-group";
-import { Spinner } from "@/components/ui/spinner";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { formatTimestamp } from "@/lib/utils";
 
-export function ProjectWorkspacePanel({
+const stageTone = {
+  draft: "orange",
+  intake: "teal",
+  active: "green",
+  archived: "muted",
+} satisfies Record<ProjectStage, StatusTone>;
+
+function DashboardPlaceholder() {
+  return (
+    <div
+      aria-hidden="true"
+      className="relative mx-auto h-28 w-52 overflow-hidden rounded-lg border border-[color:var(--cpl-soft-border)] bg-[color:var(--cpl-warm-bg)]"
+    >
+      <div className="absolute inset-x-0 bottom-0 h-12 bg-[color:var(--cpl-teal)]/10" />
+      <div className="absolute bottom-6 left-5 h-12 w-7 rounded-t-sm bg-[color:var(--cpl-navy)]/10" />
+      <div className="absolute bottom-6 left-16 h-16 w-9 rounded-t-sm bg-[color:var(--cpl-navy)]/15" />
+      <div className="absolute bottom-6 right-12 h-20 w-10 rounded-t-sm bg-[color:var(--cpl-orange)]/15" />
+      <div className="absolute bottom-20 right-8 h-px w-24 origin-left rotate-[-18deg] bg-[color:var(--cpl-orange)]/35" />
+      <div className="absolute bottom-14 right-8 h-16 w-px bg-[color:var(--cpl-orange)]/35" />
+      <div className="absolute bottom-24 right-5 size-2 rounded-full bg-[color:var(--cpl-orange)]/60" />
+    </div>
+  );
+}
+
+function projectSearchText(project: {
+  name: string;
+  slug: string;
+  programDepartment?: string;
+  location?: string;
+  projectType?: string;
+}) {
+  return [
+    project.slug,
+    project.programDepartment,
+    project.location,
+    project.projectType,
+  ]
+    .filter(Boolean)
+    .join(" / ");
+}
+
+export function ProjectDashboard({
   workspaceId,
-  preloadedProjects,
+  workspaceSlug,
+  workspaceName,
 }: {
   workspaceId: Id<"workspaces">;
-  preloadedProjects: Preloaded<typeof api.projects.listProjects>;
+  workspaceSlug: string;
+  workspaceName: string;
 }) {
-  const projects = usePreloadedQuery(preloadedProjects);
-  const createProject = useMutation(api.projects.createProject);
-  const renameProject = useMutation(api.projects.renameProject);
+  const convexAuth = useConvexAuth();
+  const projects = useQuery(
+    api.projects.listProjects,
+    convexAuth.isAuthenticated ? { workspaceId } : "skip",
+  );
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | (typeof projectStatuses)[number]
+  >("all");
   const [createOpen, setCreateOpen] = useState(false);
-  const [renameTarget, setRenameTarget] = useState<{
-    id: Id<"projects">;
-    name: string;
-  } | null>(null);
-  const [newProjectName, setNewProjectName] = useState("");
-  const [renameValue, setRenameValue] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const canCreateProject = convexAuth.isAuthenticated;
 
-  const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(deferredSearch.toLowerCase()),
+  const filteredProjects = useMemo(
+    () =>
+      projects
+        ? filterProjects(projects, {
+            search: deferredSearch,
+            status: statusFilter,
+          })
+        : [],
+    [deferredSearch, projects, statusFilter],
   );
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        <InputGroup className="md:max-w-sm">
+      <PageHeader
+        eyebrow="Project dashboard"
+        title="Projects"
+        description={`Create and resume owner-side capital projects for ${workspaceName}.`}
+        action={
+          <Button
+            onClick={() => setCreateOpen(true)}
+            disabled={!canCreateProject}
+          >
+            <PlusIcon data-icon="inline-start" />
+            New Project
+          </Button>
+        }
+      />
+
+      <BrandedCard className="grid gap-3 p-3 md:grid-cols-[minmax(0,1fr)_12rem] md:items-center">
+        <InputGroup>
           <InputGroupAddon>
             <InputGroupText>
               <SearchIcon />
@@ -80,171 +146,129 @@ export function ProjectWorkspacePanel({
             onChange={(event) => setSearch(event.target.value)}
           />
         </InputGroup>
-        <div className="md:ml-auto">
-          <Button onClick={() => setCreateOpen(true)}>Create project</Button>
-        </div>
-      </div>
+        <select
+          aria-label="Filter projects by status"
+          value={statusFilter}
+          onChange={(event) =>
+            setStatusFilter(
+              event.target.value as "all" | (typeof projectStatuses)[number],
+            )
+          }
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          <option value="all">All statuses</option>
+          {projectStatuses.map((status) => (
+            <option key={status} value={status}>
+              {getProjectStatusLabel(status)}
+            </option>
+          ))}
+        </select>
+      </BrandedCard>
 
-      <div className="page-surface overflow-hidden">
-        {filteredProjects.length === 0 ? (
-          <Empty className="border-0 p-10">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <SearchIcon />
-              </EmptyMedia>
-              <EmptyTitle>No projects yet</EmptyTitle>
-              <EmptyDescription>
-                Create the first realtime project in this workspace to exercise the starter Convex wiring.
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Updated</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredProjects.map((project) => (
-                <TableRow key={project._id}>
-                  <TableCell className="font-medium">{project.name}</TableCell>
-                  <TableCell className="capitalize">{project.status}</TableCell>
-                  <TableCell>{formatTimestamp(project.updatedAt)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setRenameTarget({ id: project._id, name: project.name });
-                        setRenameValue(project.name);
-                      }}
-                    >
-                      Rename
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create a project</DialogTitle>
-            <DialogDescription>
-              The project list is backed by Convex and updates instantly for authenticated clients.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const name = newProjectName.trim();
-
-              if (!name) {
-                return;
-              }
-
-              startTransition(async () => {
-                try {
-                  await createProject({ workspaceId, name });
-                  toast.success(`Created ${name}`);
-                  setNewProjectName("");
-                  setCreateOpen(false);
-                } catch (error) {
-                  console.error(error);
-                  toast.error("Unable to create the project.");
-                }
+      {!convexAuth.isLoading && !convexAuth.isAuthenticated ? (
+        <PermissionNotice
+          title="Permission denied"
+          description="Convex could not confirm the active WorkOS session for this project list."
+        />
+      ) : projects === undefined ? (
+        <LoadingState label="Loading project list" />
+      ) : projects.length === 0 ? (
+        <EmptyStateShell
+          icon={<DashboardPlaceholder />}
+          title="No projects yet"
+          description="Create the first project for this organization to begin intake, delivery recommendation, and procurement package work."
+          action={
+            <Button
+              onClick={() => setCreateOpen(true)}
+              disabled={!canCreateProject}
+            >
+              <PlusIcon data-icon="inline-start" />
+              New Project
+            </Button>
+          }
+          className="min-h-[24rem]"
+        />
+      ) : filteredProjects.length === 0 ? (
+        <PermissionNotice
+          title="No matching projects"
+          description="Adjust the search text or status filter to return to the organization project list."
+        />
+      ) : (
+        <BrandedCard className="overflow-hidden">
+          <div className="hidden grid-cols-[minmax(14rem,1.35fr)_minmax(11rem,0.8fr)_8rem_9rem_8rem] border-b border-[color:var(--cpl-soft-border)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground lg:grid">
+            <div>Project</div>
+            <div>Program</div>
+            <div>Stage</div>
+            <div>Updated</div>
+            <div className="text-right">Action</div>
+          </div>
+          <div className="divide-y divide-[color:var(--cpl-soft-border)]">
+            {filteredProjects.map((project) => {
+              const projectPath = buildProjectPath({
+                workspaceSlug,
+                projectSlug: project.slug,
+                section: "intake",
               });
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="project-name">Project name</FieldLabel>
-                <FieldContent>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="project-name"
-                      value={newProjectName}
-                      onChange={(event) => setNewProjectName(event.target.value)}
-                      placeholder="Signal response redesign"
-                    />
-                  </InputGroup>
-                </FieldContent>
-              </Field>
-            </FieldGroup>
-            <DialogFooter showCloseButton>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? <Spinner data-icon="inline-start" /> : null}
-                Create project
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+              const stage = getProjectStage(project);
+              const metadata = projectSearchText(project);
 
-      <Dialog open={Boolean(renameTarget)} onOpenChange={(open) => !open && setRenameTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Rename project</DialogTitle>
-            <DialogDescription>
-              Keep the sample domain minimal while still exercising authenticated mutations.
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            className="flex flex-col gap-4"
-            onSubmit={(event) => {
-              event.preventDefault();
+              return (
+                <Link
+                  key={project._id}
+                  href={projectPath}
+                  className="group grid gap-3 px-4 py-4 transition-colors hover:bg-muted/45 lg:grid-cols-[minmax(14rem,1.35fr)_minmax(11rem,0.8fr)_8rem_9rem_8rem] lg:items-center"
+                >
+                  <div className="min-w-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <StatusDot tone={stageTone[stage]} />
+                      <div className="truncate font-semibold text-[color:var(--cpl-navy)]">
+                        {project.name}
+                      </div>
+                    </div>
+                    <div className="mt-1 truncate text-xs text-muted-foreground">
+                      {metadata || project.slug}
+                    </div>
+                  </div>
+                  <div className="grid gap-1 text-sm text-muted-foreground">
+                    <span className="inline-flex min-w-0 items-center gap-1.5">
+                      <Building2Icon className="size-3.5 shrink-0 text-[color:var(--cpl-teal)]" />
+                      <span className="truncate">
+                        {project.programDepartment ?? "Unassigned program"}
+                      </span>
+                    </span>
+                    <span className="inline-flex min-w-0 items-center gap-1.5 lg:hidden">
+                      <MapPinIcon className="size-3.5 shrink-0 text-[color:var(--cpl-orange)]" />
+                      <span className="truncate">
+                        {project.location ?? "Location pending"}
+                      </span>
+                    </span>
+                  </div>
+                  <div>
+                    <StatusBadge tone={stageTone[stage]}>
+                      {getProjectStageLabel(project)}
+                    </StatusBadge>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatTimestamp(project.updatedAt)}
+                  </div>
+                  <div className="flex items-center justify-between gap-2 text-sm font-medium text-[color:var(--cpl-navy)] lg:justify-end">
+                    <span className="lg:hidden">Open intake</span>
+                    <span className="hidden lg:inline">Open</span>
+                    <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </BrandedCard>
+      )}
 
-              if (!renameTarget || !renameValue.trim()) {
-                return;
-              }
-
-              startTransition(async () => {
-                try {
-                  await renameProject({
-                    projectId: renameTarget.id,
-                    name: renameValue.trim(),
-                  });
-                  toast.success("Project renamed.");
-                  setRenameTarget(null);
-                  setRenameValue("");
-                } catch (error) {
-                  console.error(error);
-                  toast.error("Unable to rename the project.");
-                }
-              });
-            }}
-          >
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="rename-project-name">New name</FieldLabel>
-                <FieldContent>
-                  <InputGroup>
-                    <InputGroupInput
-                      id="rename-project-name"
-                      value={renameValue}
-                      onChange={(event) => setRenameValue(event.target.value)}
-                    />
-                  </InputGroup>
-                </FieldContent>
-              </Field>
-            </FieldGroup>
-            <DialogFooter showCloseButton>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? <Spinner data-icon="inline-start" /> : null}
-                Save rename
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <ProjectCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        workspaceId={workspaceId}
+        workspaceSlug={workspaceSlug}
+      />
     </div>
   );
 }

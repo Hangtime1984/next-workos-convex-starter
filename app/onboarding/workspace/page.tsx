@@ -2,6 +2,7 @@ import { withAuth } from "@workos-inc/authkit-nextjs";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateWorkspaceForm } from "@/components/forms/create-workspace-form";
+import { buildAppPath } from "@/lib/routes";
 import { buildSignInPath } from "@/lib/utils";
 
 export default async function WorkspaceOnboardingPage() {
@@ -12,7 +13,7 @@ export default async function WorkspaceOnboardingPage() {
   }
 
   if (auth.organizationId) {
-    redirect("/app");
+    redirect(buildAppPath());
   }
 
   return (

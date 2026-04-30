@@ -5,6 +5,11 @@ import Link from "next/link";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { LogOutIcon, Settings2Icon, ShieldCheckIcon } from "lucide-react";
 import type { Role } from "@/lib/types";
+import { getRoleLabel } from "@/lib/frontend-contracts";
+import {
+  buildAdminUsersPath,
+  buildProfileSettingsPath,
+} from "@/lib/routes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,7 +56,7 @@ export function UserMenu({
         render={
           <Button
             variant="ghost"
-            className="h-auto w-full justify-start px-2 py-2"
+            className="h-auto w-full justify-start px-2 py-2 text-white/[0.78] hover:bg-white/[0.09] hover:text-white group-data-[collapsible=icon]:justify-center"
           />
         }
       >
@@ -59,9 +64,9 @@ export function UserMenu({
           <AvatarImage src={user.pictureUrl ?? undefined} alt={user.name ?? "User"} />
           <AvatarFallback>{initials(user.name)}</AvatarFallback>
         </Avatar>
-        <div className="min-w-0 text-left">
+        <div className="min-w-0 text-left group-data-[collapsible=icon]:hidden">
           <div className="truncate text-sm font-medium">{user.name ?? "Workspace user"}</div>
-          <div className="truncate text-xs text-muted-foreground">
+          <div className="truncate text-xs text-white/[0.52]">
             {user.email ?? "No email available"}
           </div>
         </div>
@@ -75,17 +80,17 @@ export function UserMenu({
             <div className="truncate text-xs font-normal text-muted-foreground">
               {user.email ?? "No email available"}
             </div>
-            <Badge variant="secondary">{role}</Badge>
+            <Badge variant="secondary">{getRoleLabel(role)}</Badge>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem render={<Link href="/settings/profile" />}>
+          <DropdownMenuItem render={<Link href={buildProfileSettingsPath()} />}>
             <Settings2Icon />
             Profile settings
           </DropdownMenuItem>
           {(role === "owner" || role === "admin") && (
-            <DropdownMenuItem render={<Link href="/admin/users" />}>
+            <DropdownMenuItem render={<Link href={buildAdminUsersPath()} />}>
               <ShieldCheckIcon />
               Admin controls
             </DropdownMenuItem>

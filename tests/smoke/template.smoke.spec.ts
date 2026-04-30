@@ -18,11 +18,11 @@ test("renders the marketing shell without browser runtime errors", async ({
 
   await expect(
     page.getByRole("heading", {
-      name: /Ship the first serious version of your B2B SaaS/i,
+      name: /Choose a delivery method and assemble the right procurement package faster/i,
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Launch the starter" }),
+    page.getByRole("link", { name: "Launch the workspace" }),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Explore the app shell" }),

@@ -5,7 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAppContext } from "@/lib/server/auth";
-import { buildWorkspacePath } from "@/lib/routes";
+import {
+  buildProfileSettingsPath,
+  buildWorkspaceProjectsPath,
+} from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 export default async function AppOverviewPage() {
@@ -33,13 +36,13 @@ export default async function AppOverviewPage() {
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link
-              href={buildWorkspacePath(context.activeWorkspace.slug)}
+              href={buildWorkspaceProjectsPath(context.activeWorkspace.slug)}
               className={cn(buttonVariants())}
             >
               Open workspace
             </Link>
             <Link
-              href="/settings/profile"
+              href={buildProfileSettingsPath()}
               className={cn(buttonVariants({ variant: "outline" }))}
             >
               Open profile widget

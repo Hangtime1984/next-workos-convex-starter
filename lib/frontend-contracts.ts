@@ -11,6 +11,27 @@ export const projectStatuses = ["planning", "active", "archived"] as const;
 
 export type ProjectStatus = (typeof projectStatuses)[number];
 
+export const projectTypeOptions = [
+  "Civic / municipal",
+  "Education",
+  "Healthcare",
+  "Infrastructure",
+  "Public safety",
+  "Workplace",
+] as const;
+
+export const projectTemplateOptions = [
+  "Standard capital project",
+  "Public owner procurement",
+  "Higher education renewal",
+  "Healthcare facility upgrade",
+] as const;
+
+export type ProjectTypeOption = (typeof projectTypeOptions)[number];
+export type ProjectTemplateOption = (typeof projectTemplateOptions)[number];
+
+export type ProjectStage = "draft" | "intake" | "active" | "archived";
+
 export type {
   OutputStatus,
   RequiredIntakeField,
@@ -76,6 +97,13 @@ export const projectStatusLabels = {
   archived: "Archived",
 } satisfies Record<ProjectStatus, string>;
 
+export const projectStageLabels = {
+  draft: "Draft",
+  intake: "Intake",
+  active: "Active",
+  archived: "Archived",
+} satisfies Record<ProjectStage, string>;
+
 export const outputStatusLabels = {
   draft: "Draft",
   reviewed: "Reviewed",
@@ -91,6 +119,28 @@ export const roleLabels = {
 
 export function getProjectStatusLabel(status: ProjectStatus) {
   return projectStatusLabels[status];
+}
+
+export function getProjectStage(input: {
+  status: ProjectStatus;
+  createAsDraft?: boolean;
+}): ProjectStage {
+  if (input.status === "archived") {
+    return "archived";
+  }
+
+  if (input.status === "active") {
+    return "active";
+  }
+
+  return input.createAsDraft === false ? "intake" : "draft";
+}
+
+export function getProjectStageLabel(input: {
+  status: ProjectStatus;
+  createAsDraft?: boolean;
+}) {
+  return projectStageLabels[getProjectStage(input)];
 }
 
 export function getOutputStatusLabel(status: OutputStatus) {
@@ -131,6 +181,115 @@ export function canUseWidget(input: {
   }
 
   return hasPermission(input.permissions, "widgets:sso:manage");
+}
+
+export type CreateProjectDraft = {
+  name: string;
+  programDepartment: string;
+  location: string;
+  projectType: string;
+  templateKey: string;
+  createAsDraft: boolean;
+};
+
+export type CreateProjectValidationErrors = Partial<
+  Record<keyof Omit<CreateProjectDraft, "templateKey" | "createAsDraft">, string>
+>;
+
+export function createEmptyProjectDraft(): CreateProjectDraft {
+  return {
+    name: "",
+    programDepartment: "",
+    location: "",
+    projectType: "",
+    templateKey: "",
+    createAsDraft: true,
+  };
+}
+
+export function normalizeCreateProjectDraft(draft: CreateProjectDraft) {
+  return {
+    name: draft.name.trim(),
+    programDepartment: draft.programDepartment.trim(),
+    location: draft.location.trim(),
+    projectType: draft.projectType.trim(),
+    templateKey: draft.templateKey.trim() || undefined,
+    createAsDraft: draft.createAsDraft,
+  };
+}
+
+export function validateCreateProjectDraft(
+  draft: CreateProjectDraft,
+): CreateProjectValidationErrors {
+  const normalized = normalizeCreateProjectDraft(draft);
+  const errors: CreateProjectValidationErrors = {};
+
+  if (normalized.name.length < 2) {
+    errors.name = "Project name must be at least 2 characters.";
+  }
+
+  if (!normalized.programDepartment) {
+    errors.programDepartment = "Program or department is required.";
+  }
+
+  if (!normalized.location) {
+    errors.location = "Location is required.";
+  }
+
+  if (!normalized.projectType) {
+    errors.projectType = "Project type is required.";
+  }
+
+  return errors;
+}
+
+export function isCreateProjectDraftValid(draft: CreateProjectDraft) {
+  return Object.keys(validateCreateProjectDraft(draft)).length === 0;
+}
+
+export type ProjectListFilter = {
+  search: string;
+  status: "all" | ProjectStatus;
+};
+
+export type FilterableProject = Pick<
+  ProjectRecord,
+  | "name"
+  | "slug"
+  | "status"
+  | "programDepartment"
+  | "location"
+  | "projectType"
+>;
+
+export function filterProjects<TProject extends FilterableProject>(
+  projects: readonly TProject[],
+  filter: ProjectListFilter,
+) {
+  const query = filter.search.trim().toLowerCase();
+
+  return projects.filter((project) => {
+    const matchesStatus =
+      filter.status === "all" || project.status === filter.status;
+
+    if (!matchesStatus) {
+      return false;
+    }
+
+    if (!query) {
+      return true;
+    }
+
+    return [
+      project.name,
+      project.slug,
+      project.programDepartment,
+      project.location,
+      project.projectType,
+    ]
+      .filter((value): value is string => typeof value === "string")
+      .some((value) => value.toLowerCase().includes(query));
+  });
 }
 
 export type NormalizedAppErrorKind =

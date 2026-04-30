@@ -51,38 +51,46 @@
 }
 
 :root {
-  --background: oklch(0.985 0.01 90);
-  --foreground: oklch(0.22 0.02 215);
-  --card: oklch(1 0.01 95);
-  --card-foreground: oklch(0.22 0.02 215);
-  --popover: oklch(0.995 0.01 90);
-  --popover-foreground: oklch(0.22 0.02 215);
-  --primary: oklch(0.37 0.12 198);
-  --primary-foreground: oklch(0.985 0.01 90);
-  --secondary: oklch(0.94 0.015 95);
-  --secondary-foreground: oklch(0.26 0.02 215);
-  --muted: oklch(0.955 0.012 95);
-  --muted-foreground: oklch(0.52 0.02 215);
-  --accent: oklch(0.91 0.03 184);
-  --accent-foreground: oklch(0.25 0.03 205);
+  --cpl-deep-navy: oklch(0.2 0.075 255);
+  --cpl-navy: oklch(0.25 0.09 250);
+  --cpl-orange: oklch(0.64 0.18 44);
+  --cpl-teal: oklch(0.48 0.12 190);
+  --cpl-success: oklch(0.53 0.14 145);
+  --cpl-warm-bg: oklch(0.975 0.018 84);
+  --cpl-soft-border: oklch(0.89 0.018 82);
+  --cpl-card-shadow: 0 22px 60px -42px oklch(0.25 0.09 250 / 0.42);
+  --background: var(--cpl-warm-bg);
+  --foreground: oklch(0.25 0.04 240);
+  --card: oklch(0.995 0.008 86);
+  --card-foreground: oklch(0.24 0.04 240);
+  --popover: oklch(0.995 0.008 86);
+  --popover-foreground: oklch(0.24 0.04 240);
+  --primary: var(--cpl-navy);
+  --primary-foreground: oklch(0.985 0.01 86);
+  --secondary: oklch(0.94 0.018 82);
+  --secondary-foreground: oklch(0.28 0.04 240);
+  --muted: oklch(0.94 0.014 84);
+  --muted-foreground: oklch(0.49 0.035 242);
+  --accent: oklch(0.91 0.04 185);
+  --accent-foreground: var(--cpl-navy);
   --destructive: oklch(0.61 0.24 25);
-  --border: oklch(0.9 0.015 95);
-  --input: oklch(0.9 0.015 95);
-  --ring: oklch(0.62 0.08 196);
+  --border: var(--cpl-soft-border);
+  --input: oklch(0.88 0.018 82);
+  --ring: var(--cpl-teal);
   --chart-1: oklch(0.68 0.15 198);
   --chart-2: oklch(0.74 0.12 165);
   --chart-3: oklch(0.62 0.09 246);
   --chart-4: oklch(0.8 0.12 78);
   --chart-5: oklch(0.72 0.17 35);
-  --radius: 1rem;
-  --sidebar: oklch(0.975 0.012 92);
-  --sidebar-foreground: oklch(0.22 0.02 215);
-  --sidebar-primary: oklch(0.37 0.12 198);
-  --sidebar-primary-foreground: oklch(0.985 0.01 90);
-  --sidebar-accent: oklch(0.93 0.025 190);
-  --sidebar-accent-foreground: oklch(0.24 0.03 205);
-  --sidebar-border: oklch(0.9 0.015 95);
-  --sidebar-ring: oklch(0.62 0.08 196);
+  --radius: 0.75rem;
+  --sidebar: var(--cpl-deep-navy);
+  --sidebar-foreground: oklch(0.94 0.02 88);
+  --sidebar-primary: var(--cpl-orange);
+  --sidebar-primary-foreground: oklch(0.995 0.008 86);
+  --sidebar-accent: oklch(0.3 0.085 250);
+  --sidebar-accent-foreground: oklch(0.985 0.01 86);
+  --sidebar-border: oklch(0.34 0.065 250);
+  --sidebar-ring: var(--cpl-teal);
 }
 
 @layer base {
@@ -101,23 +109,28 @@
   body {
     @apply min-h-screen bg-background text-foreground;
     background-image:
-      radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 55%, transparent) 0, transparent 34%),
-      radial-gradient(circle at bottom left, color-mix(in oklab, var(--primary) 28%, transparent) 0, transparent 28%),
-      linear-gradient(180deg, color-mix(in oklab, var(--card) 82%, transparent) 0%, transparent 30%);
+      linear-gradient(to right, oklch(0.85 0.018 84 / 0.36) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.85 0.018 84 / 0.32) 1px, transparent 1px),
+      linear-gradient(180deg, oklch(0.992 0.01 86) 0%, var(--background) 46%, oklch(0.955 0.02 82) 100%);
+    background-size: 84px 84px, 84px 84px, auto;
   }
 }
 
 @layer utilities {
   .page-shell {
-    @apply mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 py-10 md:px-8;
+    @apply mx-auto flex w-full max-w-7xl flex-col gap-8 overflow-x-hidden px-4 py-6 sm:px-6 md:px-8 md:py-10;
   }
 
   .page-surface {
-    @apply rounded-3xl border border-border/70 bg-card/90 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_18px_64px_-28px_rgba(24,42,59,0.18)] backdrop-blur;
+    @apply rounded-lg border border-[color:var(--cpl-soft-border)] bg-card/95 shadow-[var(--cpl-card-shadow)] backdrop-blur;
+  }
+
+  .cpl-card {
+    @apply rounded-lg border border-[color:var(--cpl-soft-border)] bg-card/95 shadow-[var(--cpl-card-shadow)];
   }
 
   .hero-panel {
-    @apply relative overflow-hidden rounded-[2rem] border border-border/70 bg-card/90 shadow-[0_40px_120px_-60px_rgba(24,42,59,0.55)];
+    @apply relative overflow-hidden rounded-lg border border-[color:var(--cpl-soft-border)] bg-card/95 shadow-[var(--cpl-card-shadow)];
   }
 
   .grid-noise {

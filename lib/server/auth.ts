@@ -5,6 +5,7 @@ import { cache } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Role, WorkspaceSummary } from "@/lib/types";
 import {
+  buildAppPath,
   buildProjectPath,
   buildWorkspacePath,
   buildWorkspaceProjectsPath,
@@ -124,7 +125,7 @@ export async function requireAdminContext() {
   const context = await getAppContext();
 
   if (!canAccessAdmin(context.role)) {
-    redirect("/app");
+    redirect(buildAppPath());
   }
 
   return context;

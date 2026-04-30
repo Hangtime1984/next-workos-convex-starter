@@ -3,6 +3,7 @@
 import { refreshSession, withAuth } from "@workos-inc/authkit-nextjs";
 import { redirect } from "next/navigation";
 import { getWorkOS } from "@/lib/server/workos";
+import { buildAppPath } from "@/lib/routes";
 import { slugify } from "@/lib/utils";
 
 export type CreateWorkspaceState = {
@@ -74,5 +75,5 @@ export async function createWorkspaceAction(
     } satisfies CreateWorkspaceState;
   }
 
-  redirect("/app");
+  redirect(buildAppPath());
 }
